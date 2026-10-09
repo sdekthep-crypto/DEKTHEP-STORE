@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dekthep Panel - ระบบจัดการคีย์ & เชื่อมต่อแผง Reseller</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Remix Icons / Lucide icons CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ========================================================= -->
+<!-- AUTH OVERLAY / LOGIN SCREEN                               -->
+<!-- ========================================================= -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">
+        <i class="ri-shield-keyhole-line"></i>
+      </div>
+      <h3>DEKTHEP PANEL</h3>
+      <p>ระบบรักษาความปลอดภัย กรุณาเข้าสู่ระบบ</p>
+    </div>
+
+    <div class="auth-alert" id="authAlert">
+      <i class="ri-error-warning-fill"></i>
+      <span id="authAlertMsg">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</span>
+    </div>
+
+    <form id="formLogin">
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>ชื่อผู้ใช้งาน (Username)</label>
+        <div class="input-icon-wrap">
+          <i class="ri-user-3-line field-icon"></i>
+          <input type="text" class="form-control" id="loginUsername" placeholder="DEKTHEP" value="DEKTHEP" required autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label>รหัสผ่าน (Password)</label>
+        <div class="input-icon-wrap">
+          <i class="ri-lock-password-line field-icon"></i>
+          <input type="password" class="form-control" id="loginPassword" placeholder="0822847225sa5" required autocomplete="current-password">
+          <button type="button" class="btn-toggle-pass" id="btnToggleLoginPass" title="แสดง/ซ่อนรหัสผ่าน">
+            <i class="ri-eye-line" id="iconTogglePass"></i>
+          </button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 13px; color: var(--text-muted);">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="loginRememberMe" checked style="accent-color: var(--primary);">
+          <span>จดจำการเข้าสู่ระบบ</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 15px;">
+        <i class="ri-login-box-line"></i> เข้าสู่ระบบแผงควบคุม
+      </button>
+
+      <div class="auth-hint">
+        💡 <strong>ข้อมูลเข้าสู่ระบบ:</strong> ชื่อผู้ใช้: <code style="color: #38bdf8;">DEKTHEP</code> | รหัสผ่าน: <code style="color: #38bdf8;">0822847225sa5</code>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="app-container">
+  
+  <!-- ========================================================= -->
+  <!-- SIDEBAR NAVIGATION                                        -->
+  <!-- ========================================================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-section">
+      <div class="brand-logo">
+        <i class="ri-shield-keyhole-line"></i>
+      </div>
+      <div class="brand-info">
+        <h1>DEKTHEP PANEL</h1>
+        <p>Reseller & Key Management</p>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-label">เมนูหลัก</div>
+      
+      <a class="nav-item active" data-page="dashboard">
+        <span class="nav-icon"><i class="ri-dashboard-3-line"></i></span>
+        <span>หน้าควบคุมระบบ</span>
+      </a>
+
+      <a class="nav-item" data-page="keys">
+        <span class="nav-icon"><i class="ri-key-2-line"></i></span>
+        <span>รายการคีย์ทั้งหมด</span>
+      </a>
+
+      <a class="nav-item" data-page="categories">
+        <span class="nav-icon"><i class="ri-folders-line"></i></span>
+        <span>หมวดหมู่คีย์</span>
+      </a>
+
+      <a class="nav-item" data-page="hwid">
+        <span class="nav-icon"><i class="ri-computer-line"></i></span>
+        <span>ระบบล็อคเครื่อง (HWID)</span>
+      </a>
+
+      <div class="nav-label" style="margin-top: 10px;">การเชื่อมต่อ API</div>
+
+      <a class="nav-item" data-page="upstream">
+        <span class="nav-icon"><i class="ri-cloud-line"></i></span>
+        <span>เชื่อมต่อแผง API</span>
+      </a>
+
+      <a class="nav-item" data-page="docs">
+        <span class="nav-icon"><i class="ri-code-box-line"></i></span>
+        <span>เอกสาร API (Client)</span>
+      </a>
+
+      <a class="nav-item" data-page="tester">
+        <span class="nav-icon"><i class="ri-terminal-box-line"></i></span>
+        <span>ทดสอบยิง API คีย์</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="server-indicator">
+        <span class="pulse-dot" id="serverPulse"></span>
+        <span id="serverStatusText">กำลังเชื่อมต่อ...</span>
+      </div>
+      <button class="btn btn-outline btn-sm" id="btnRefreshAll" title="รีเฟรชข้อมูล">
+        <i class="ri-refresh-line"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================================= -->
+  <!-- MAIN CONTENT AREA                                         -->
+  <!-- ========================================================= -->
+  <main class="main-content">
+    
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="page-title-wrap">
+        <h2 id="currentPageTitle">
+          <i class="ri-dashboard-3-line" id="currentPageIcon"></i>
+          <span id="currentPageText">หน้าควบคุมระบบ</span>
+        </h2>
+        <p id="currentPageDesc">ภาพรวมสถิติคีย์, การผูกเครื่อง HWID และการเชื่อมต่อแผง</p>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="btnQuickGenKey">
+          <i class="ri-add-circle-line"></i>
+          <span>สร้างคีย์ใหม่</span>
+        </button>
+        <button class="btn btn-purple" id="btnSyncUpstream">
+          <i class="ri-repeat-2-line"></i>
+          <span>ซิงค์กับแผง</span>
+        </button>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 5px 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #06b6d4, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 14px; color: white;">
+            <i class="ri-shield-user-line"></i>
+          </div>
+          <div style="text-align: left; margin-right: 4px;">
+            <div style="font-size: 12px; font-weight: 600; color: #ffffff;" id="displayAdminUser">admin</div>
+            <div style="font-size: 10px; color: var(--accent-green); line-height: 1;">ผู้ดูแลระบบ</div>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btnOpenChangePassModal" title="เปลี่ยนรหัสผ่าน" style="padding: 5px 8px;">
+            <i class="ri-key-line"></i>
+          </button>
+          <button class="btn btn-danger btn-sm" id="btnLogout" title="ออกจากระบบ" style="padding: 5px 8px;">
+            <i class="ri-logout-box-r-line"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- PAGE 1: หน้าควบคุมระบบ (Dashboard)                     -->
+    <!-- ------------------------------------------------------- -->
+    <section class="page-section" id="page-dashboard">
+      
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card card-cyan">
+          <div class="stat-header">
+            <span class="stat-title">คีย์ทั้งหมดในระบบ</span>
+            <div class="stat-icon"><i class="ri-key-fill"></i></div>
+          </div>
+          <div class="stat-value" id="statTotalKeys">0</div>
+          <div class="stat-sub">รวมทุกสถานะและแพ็กเกจ</div>
+        </div>
+
+        <div class="stat-card card-green">
+          <div class="stat-header">
+            <span class="stat-title">คีย์ที่เปิดใช้งานอยู่</span>
+            <div class="stat-icon"><i class="ri-checkbox-circle-fill"></i></div>
+          </div>
+          <div class="stat-value" id="statActiveKeys">0</div>
+          <div class="stat-sub">มีผู้ใช้งานกำลังออนไลน์</div>
+        </div>
+
+        <div class="stat-card card-amber">
+          <div class="stat-header">
+            <span class="stat-title">คีย์สต็อก (ยังไม่เปิดใช้)</span>
+            <div class="stat-icon"><i class="ri-inbox-archive-fill"></i></div>
+          </div>
+          <div class="stat-value" id="statUnusedKeys">0</div>
+          <div class="stat-sub">พร้อมจำหน่ายหรือส่งมอบ</div>
+        </div>
+
+        <div class="stat-card card-purple">
+          <div class="stat-header">
+            <span class="stat-title">เครื่องที่ผูก HWID</span>
+            <div class="stat-icon"><i class="ri-shield-check-fill"></i></div>
+          </div>
+          <div class="stat-value" id="statHwidBound">0</div>
+          <div class="stat-sub">ระบบป้องกันการแชร์คีย์</div>
+        </div>
+      </div>
+
+      <!-- Upstream Reseller Panel Status Bar -->
+      <div class="glass-card" style="margin-bottom: 24px; border-left: 4px solid var(--accent-purple);">
+        <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--accent-purple); font-weight: 700; letter-spacing: 1px;">
+              <i class="ri-router-line"></i> สถานะการเชื่อมต่อแผงหลัก (Upstream Reseller Panel)
+            </div>
+            <div style="font-size: 16px; font-weight: 600; color: #ffffff; margin-top: 4px;" id="dashboardUpstreamStatus">
+              กำลังเชื่อมต่อแผง: <span style="color: #38bdf8;">https://api.panel-example.com/v1</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              โหมดการทำงาน: <span class="badge badge-unused">Local First & Sync Ready</span> | ยอดเงินคงเหลือในแผง: <strong style="color: #34d399;">1,450.00 THB</strong>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="navigateTo('upstream')">
+            <i class="ri-settings-4-line"></i> ตั้งค่าการเชื่อมต่อแผง
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Activity Logs -->
+      <div class="glass-card">
+        <div class="card-header">
+          <h3><i class="ri-history-line"></i> บันทึกกิจกรรมระบบล่าสุด (System Logs)</h3>
+          <span style="font-size: 12px; color: var(--text-dim);">อัปเดตแบบเรียลไทม์</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>เวลา</th>
+                  <th>ประเภท</th>
+                  <th>รายละเอียด</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody id="recentLogsTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- PAGE 2: รายการคีย์ทั้งหมด (All Keys)                    -->
+    <!-- ------------------------------------------------------- -->
+    <section class="page-section" id="page-keys" style="display: none;">
+      
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="filter-bar">
+            <div class="search-input-wrap">
+              <i class="ri-search-line search-icon"></i>
+              <input type="text" id="keySearchInput" placeholder="ค้นหาตาม คีย์, HWID, หรือหมายเหตุ...">
+            </div>
+
+            <select class="select-filter" id="keyFilterCategory">
+              <option value="">ทุกหมวดหมู่</option>
+              <!-- Dynamic -->
+            </select>
+
+            <select class="select-filter" id="keyFilterStatus">
+              <option value="">ทุกสถานะ</option>
+              <option value="active">กำลังใช้งาน (Active)</option>
+              <option value="unused">ยังไม่เปิดใช้ (Unused)</option>
+              <option value="expired">หมดอายุ (Expired)</option>
+              <option value="banned">ถูกระงับ (Banned)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline btn-sm" id="btnExportKeys">
+              <i class="ri-download-2-line"></i> ส่งออกคีย์ (.txt)
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnOpenGenModal">
+              <i class="ri-add-line"></i> สร้างคีย์ใหม่
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>รหัสคีย์ (License Key)</th>
+                  <th>หมวดหมู่</th>
+                  <th>สถานะ</th>
+                  <th>วันเปิดใช้</th>
+                  <th>วันหมดอายุ</th>
+                  <th>HWID ที่ผูก</th>
+                  <th>หมายเหตุ / ลูกค้า</th>
+                  <th style="text-align: right;">การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="keysTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- PAGE 3: หมวดหมู่คีย์ (Key Categories)                   -->
+    <!-- ------------------------------------------------------- -->
+    <section class="page-section" id="page-categories" style="display: none;">
+      
+      <div class="glass-card">
+        <div class="card-header">
+          <h3><i class="ri-folders-line"></i> จัดการหมวดหมู่และแพ็กเกจคีย์</h3>
+          <button class="btn btn-primary btn-sm" id="btnOpenAddCategoryModal">
+            <i class="ri-add-line"></i> เพิ่มหมวดหมู่ใหม่
+          </button>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>รหัสหมวดหมู่</th>
+                  <th>ชื่อแพ็กเกจ</th>
+                  <th>คำนำหน้า (Prefix)</th>
+                  <th>ระยะเวลา</th>
+                  <th>ราคา (บาท)</th>
+                  <th>รายละเอียด</th>
+                  <th style="text-align: right;">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="categoriesTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- PAGE 4: ระบบล็อคเครื่อง (HWID Management)               -->
+    <!-- ------------------------------------------------------- -->
+    <section class="page-section" id="page-hwid" style="display: none;">
+      
+      <div class="glass-card">
+        <div class="card-header">
+          <h3><i class="ri-computer-line"></i> รายการเครื่องที่ผูกกับคีย์ (HWID Binds)</h3>
+          <div style="font-size: 13px; color: var(--text-dim);">
+            ป้องกันการสลับเครื่องหรือแชร์คีย์โดยไม่ได้รับอนุญาต
+          </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>รหัส HWID ของเครื่อง</th>
+                  <th>คีย์ที่ผูกอยู่</th>
+                  <th>หมวดหมู่</th>
+                  <th>IP ล่าสุด</th>
+                  <th>สถานะ</th>
+                  <th>จำนวนครั้งที่รีเซ็ต</th>
+                  <th style="text-align: right;">ปลดล็อค HWID</th>
+                </tr>
+              </thead>
+              <tbody id="hwidTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blacklist Box -->
+      <div class="glass-card" style="border-color: rgba(239, 68, 68, 0.2);">
+        <div class="card-header">
+          <h3 style="color: #fca5a5;"><i class="ri-spam-2-line"></i> บัญชีดำ HWID (Blacklisted Machines)</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>HWID ที่ถูกแบน</th>
+                  <th>สาเหตุการแบน</th>
+                  <th>วันที่แบน</th>
+                </tr>
+              </thead>
+              <tbody id="hwidBlacklistTableBody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- PAGE 5: เชื่อมต่อแผง API (Reseller Panel Integration)  -->
+    <!-- ------------------------------------------------------- -->
+    <section class="page-section" id="page-upstream" style="display: none;">
+      
+      <div class="glass-card">
+        <div class="card-header">
+          <h3><i class="ri-cloud-line"></i> ตั้งค่าการเชื่อมต่อ API แผงหลัก (Upstream Reseller Panel)</h3>
+          <span class="badge badge-active" id="badgeUpstreamLiveStatus">พร้อมเชื่อมต่อ</span>
+        </div>
+
+        <div class="card-body">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+            กำหนด URL และ API Key ของแผง Reseller ที่คุณเป็นตัวแทนจำหน่าย เพื่อส่งคำสั่งสร้างคีย์ ซิงค์สต็อก หรือเช็คยอดเงินในแผงโดยอัตโนมัติ
+          </p>
+
+          <form id="formUpstreamSettings">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+              
+              <div class="form-group">
+                <label>Base URL ของแผง Reseller</label>
+                <input type="text" class="form-control" id="upstreamBaseUrl" placeholder="https://api.panel-example.com/v1" value="https://api.panel-example.com/v1">
+                <span style="font-size: 11px; color: var(--text-dim);">URL ปลายทางของแผงตัวแทนจำหน่าย</span>
+              </div>
+
+              <div class="form-group">
+                <label>API Key / Secret Token</label>
+                <input type="password" class="form-control" id="upstreamApiKey" placeholder="dekthep_live_sec_..." value="dekthep_live_sec_99482018472918">
+                <span style="font-size: 11px; color: var(--text-dim);">รหัส API Secret ที่ได้รับจากแผงหลัก</span>
+              </div>
+
+              <div class="form-group">
+                <label>Reseller ID / บัญชีตัวแทน</label>
+                <input type="text" class="form-control" id="upstreamResellerId" placeholder="DEKTHEP_01" value="DEKTHEP_01">
+              </div>
+
+              <div class="form-group">
+                <label>โหมดการสร้างคีย์ (Sync Mode)</label>
+                <select class="form-control" id="upstreamSyncMode">
+                  <option value="local_first">โหมดระบบภายใน (Local Database Fast - แนะนำ)</option>
+                  <option value="upstream_first">โหมดส่งคำสั่งตรงไปแผงหลัก (Direct Forwarding)</option>
+                  <option value="hybrid">โหมดผสม (Local Key + Upstream Notify)</option>
+                </select>
+              </div>
+
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-purple" id="btnTestUpstream">
+                <i class="ri-wifi-line"></i> ทดสอบการเชื่อมต่อแผง (Test Connection)
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="ri-save-line"></i> บันทึกการตั้งค่า
+              </button>
+            </div>
+          </form>
+
+          <!-- Upstream Test Result Box -->
+          <div id="upstreamResultBox" style="display: none; margin-top: 24px;">
+            <div class="glass-card" style="background: rgba(15, 23, 42, 0.9); border-color: rgba(6, 182, 212, 0.3);">
+              <div class="card-header">
+                <h4 style="color: #38bdf8; font-size: 15px;"><i class="ri-checkbox-circle-line"></i> ผลการทดสอบเชื่อมต่อแผง</h4>
+              </div>
+              <div class="card-body">
+                <div id="upstreamResultContent" style="font-size: 13px; color: #f1f5f9; line-height: 1.8;"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- PAGE 6: เอกสาร API (Client Integration Docs)          -->
+    <!-- ------------------------------------------------------- -->
+    <section class="page-section" id="page-docs" style="display: none;">
+      
+      <div class="glass-card">
+        <div class="card-header">
+          <h3><i class="ri-code-box-line"></i> เอกสารและโค้ดตัวอย่างเชื่อมต่อ API ฝั่งโปรแกรม</h3>
+        </div>
+        <div class="card-body">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+            สำหรับนักพัฒนาโปรแกรม, สคริปต์ FiveM, บอท Discord หรือซอฟต์แวร์ต่างๆ ที่ต้องการนำ API ของแผงนี้ไปเช็คคีย์และล็อคเครื่อง
+          </p>
+
+          <!-- Endpoint 1 -->
+          <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="badge" style="background: #0284c7; color: white;">POST</span>
+              <strong style="font-family: 'Fira Code', monospace; color: #38bdf8;">/api/license/verify</strong>
+              <span style="font-size: 13px; color: var(--text-muted);">- ตรวจสอบคีย์ & ผูกเครื่องอัตโนมัติ</span>
+            </div>
+            
+            <div class="code-container">
+              <button class="btn-copy-code" onclick="copyCode(this)">คัดลอก</button>
+              <pre><code>// ตัวอย่าง JSON Request Body
+{
+  "key": "DEKTHEP-1D-XXXX-YYYY-ZZZZ",
+  "hwid": "BFEBFBFF000906EA-8C47-D22A-5E91"
+}
+
+// ตัวอย่าง Response Success (200 OK)
+{
+  "valid": true,
+  "status": "SUCCESS",
+  "message": "ยืนยันคีย์สำเร็จ ยินดีต้อนรับ!",
+  "data": {
+    "key": "DEKTHEP-1D-XXXX-YYYY-ZZZZ",
+    "category": "รายวัน (1 Day)",
+    "expiresAt": "2026-10-10T08:00:00Z",
+    "isLifetime": false,
+    "hwid": "BFEBFBFF000906EA-8C47-D22A-5E91"
+  }
+}</code></pre>
+            </div>
+          </div>
+
+          <!-- Python Sample -->
+          <div style="margin-bottom: 24px;">
+            <h4 style="font-size: 15px; color: #ffffff; margin-bottom: 8px;">
+              <i class="ri-file-code-line"></i> ตัวอย่างโค้ดภาษา Python
+            </h4>
+            <div class="code-container">
+              <button class="btn-copy-code" onclick="copyCode(this)">คัดลอก</button>
+              <pre><code>import requests
+import subprocess
+
+def get_hwid():
+    # ดึงค่า UUID ของเครื่อง Windows
+    cmd = 'wmic csproduct get uuid'
+    return subprocess.check_output(cmd, shell=True).decode().split('\n')[1].strip()
+
+def verify_key(license_key):
+    api_url = "http://localhost:8080/api/license/verify"
+    payload = {
+        "key": license_key,
+        "hwid": get_hwid()
+    }
+    
+    response = requests.post(api_url, json=payload)
+    data = response.json()
+    
+    if data.get("valid"):
+        print(f"[+] เข้าสู่ระบบสำเร็จ! หมดอายุ: {data['data']['expiresAt']}")
+        return True
+    else:
+        print(f"[-] ข้อผิดพลาด: {data.get('message')}")
+        return False
+
+# เรียกใช้งาน
+verify_key("DEKTHEP-1D-A8F2-99C1-71B0")</code></pre>
+            </div>
+          </div>
+
+          <!-- C# Sample -->
+          <div>
+            <h4 style="font-size: 15px; color: #ffffff; margin-bottom: 8px;">
+              <i class="ri-file-code-line"></i> ตัวอย่างโค้ดภาษา C# (.NET)
+            </h4>
+            <div class="code-container">
+              <button class="btn-copy-code" onclick="copyCode(this)">คัดลอก</button>
+              <pre><code>using System;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+
+class Program {
+    static async Task Main() {
+        var client = new HttpClient();
+        var json = "{\"key\":\"DEKTHEP-1D-A8F2-99C1-71B0\",\"hwid\":\"PC-USER-001\"}";
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        var response = await client.PostAsync("http://localhost:8080/api/license/verify", content);
+        var result = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(result);
+    }
+}</code></pre>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- PAGE 7: ทดสอบยิง API คีย์ (Interactive API Tester)      -->
+    <!-- ------------------------------------------------------- -->
+    <section class="page-section" id="page-tester" style="display: none;">
+      
+      <div class="glass-card">
+        <div class="card-header">
+          <h3><i class="ri-terminal-box-line"></i> เครื่องมือทดสอบยิง API ตรวจสอบคีย์ & HWID แบบเรียลไทม์</h3>
+        </div>
+        <div class="card-body">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+            ทดสอบการส่งคำขอเสมือนเป็นโปรแกรมเกมหรือบอทเพื่อทดสอบการทำงานของระบบคีย์
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div class="form-group">
+              <label>รหัสคีย์ที่ต้องการทดสอบ</label>
+              <input type="text" class="form-control" id="testKeyInput" placeholder="DEKTHEP-1D-A8F2-99C1-71B0">
+            </div>
+
+            <div class="form-group">
+              <label>รหัส HWID เสมือน</label>
+              <input type="text" class="form-control" id="testHwidInput" placeholder="BFEBFBFF000906EA-8C47-D22A-5E91">
+            </div>
+          </div>
+
+          <div style="margin-top: 18px; display: flex; gap: 10px;">
+            <button class="btn btn-primary" id="btnExecuteTestVerify">
+              <i class="ri-play-fill"></i> ส่งคำขอทดสอบ (Verify Key)
+            </button>
+            <button class="btn btn-outline" id="btnFillRandomKey">
+              <i class="ri-magic-line"></i> สุ่มคีย์จากระบบ
+            </button>
+          </div>
+
+          <div style="margin-top: 24px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">ผลลัพธ์การตอบกลับ (API Response JSON):</label>
+            <div class="code-container" style="min-height: 150px;">
+              <pre><code id="testOutputConsole">// กดปุ่ม 'ส่งคำขอทดสอบ' เพื่อดูผลลัพธ์จาก API</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL: สร้างคีย์ใหม่ (Generate Key Modal)                 -->
+<!-- ========================================================= -->
+<div class="modal-backdrop" id="modalGenKeys">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h4><i class="ri-key-2-line"></i> สร้างคีย์ใหม่</h4>
+      <button class="btn-close-modal" onclick="closeModal('modalGenKeys')">&times;</button>
+    </div>
+    <form id="formGenKeys">
+      <div class="modal-body">
+        
+        <div class="form-group">
+          <label>เลือกหมวดหมู่ / แพ็กเกจ</label>
+          <select class="form-control" id="genCategoryId" required>
+            <!-- Dynamic -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>จำนวนคีย์ที่ต้องการสร้าง</label>
+          <input type="number" class="form-control" id="genQuantity" value="1" min="1" max="100" required>
+          <span style="font-size: 11px; color: var(--text-dim);">สร้างได้ครั้งละ 1 ถึง 100 คีย์</span>
+        </div>
+
+        <div class="form-group">
+          <label>คำนำหน้าคีย์ (Prefix - เว้นว่างเพื่อใช้ตามหมวดหมู่)</label>
+          <input type="text" class="form-control" id="genPrefix" placeholder="เช่น DEKTHEP-VIP">
+        </div>
+
+        <div class="form-group">
+          <label>หมายเหตุ / ชื่อลูกค้า</label>
+          <input type="text" class="form-control" id="genNote" placeholder="เช่น ลูกค้า Discord, สต็อกแผง">
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalGenKeys')">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary"><i class="ri-check-line"></i> ยืนยันสร้างคีย์</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL: ต่ออายุคีย์ (Extend Key Modal)                     -->
+<!-- ========================================================= -->
+<div class="modal-backdrop" id="modalExtendKey">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h4><i class="ri-time-line"></i> ต่ออายุคีย์</h4>
+      <button class="btn-close-modal" onclick="closeModal('modalExtendKey')">&times;</button>
+    </div>
+    <form id="formExtendKey">
+      <div class="modal-body">
+        <input type="hidden" id="extendTargetKey">
+        <div style="font-size: 13px; color: var(--text-muted);">
+          คีย์: <strong id="extendKeyDisplay" style="color: #38bdf8;"></strong>
+        </div>
+
+        <div class="form-group" style="margin-top: 14px;">
+          <label>จำนวนวันที่ต้องการเพิ่ม (วัน)</label>
+          <input type="number" class="form-control" id="extendDays" value="7" min="1" max="365" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalExtendKey')">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">ยืนยันต่ออายุ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL: จัดการหมวดหมู่ (Category Modal)                    -->
+<!-- ========================================================= -->
+<div class="modal-backdrop" id="modalCategory">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h4 id="categoryModalTitle"><i class="ri-folders-line"></i> เพิ่มหมวดหมู่</h4>
+      <button class="btn-close-modal" onclick="closeModal('modalCategory')">&times;</button>
+    </div>
+    <form id="formCategory">
+      <div class="modal-body">
+        <input type="hidden" id="categoryFormId">
+
+        <div class="form-group">
+          <label>ชื่อหมวดหมู่</label>
+          <input type="text" class="form-control" id="catName" placeholder="เช่น รายสัปดาห์ (7 Days)" required>
+        </div>
+
+        <div class="form-group">
+          <label>คำนำหน้าคีย์ (Prefix)</label>
+          <input type="text" class="form-control" id="catPrefix" placeholder="เช่น DEKTHEP-7D" required>
+        </div>
+
+        <div class="form-group">
+          <label>ระยะเวลา (วัน - 9999 คือถาวร)</label>
+          <input type="number" class="form-control" id="catDays" value="7" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label>ราคา (บาท)</label>
+          <input type="number" class="form-control" id="catPrice" value="250" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label>รายละเอียด</label>
+          <input type="text" class="form-control" id="catDesc" placeholder="รายละเอียดแพ็กเกจ">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalCategory')">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL: แสดงผลคีย์ที่สร้าง (Bulk Key Result)               -->
+<!-- ========================================================= -->
+<div class="modal-backdrop" id="modalResultKeys">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h4><i class="ri-checkbox-circle-line" style="color: var(--accent-green);"></i> สร้างคีย์สำเร็จ</h4>
+      <button class="btn-close-modal" onclick="closeModal('modalResultKeys')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 13px; color: var(--text-muted);">
+        คัดลอกรายการคีย์ทั้งหมดที่สร้างเพื่อนำไปใช้งานหรือจัดส่งให้ลูกค้า:
+      </p>
+      <textarea class="form-control" id="resultKeysTextarea" rows="8" readonly style="font-family: 'Fira Code', monospace; font-size: 13px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" id="btnCopyResultKeys">
+        <i class="ri-file-copy-line"></i> คัดลอกคีย์ทั้งหมด
+      </button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('modalResultKeys')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL: เปลี่ยนรหัสผ่านแอดมิน (Change Password Modal)         -->
+<!-- ========================================================= -->
+<div class="modal-backdrop" id="modalChangePassword">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h4><i class="ri-shield-keyhole-line"></i> เปลี่ยนรหัสผ่านแอดมิน</h4>
+      <button class="btn-close-modal" onclick="closeModal('modalChangePassword')">&times;</button>
+    </div>
+    <form id="formChangePassword">
+      <div class="modal-body">
+        
+        <div class="form-group">
+          <label>ชื่อผู้ใช้งานใหม่ (เว้นว่างไว้หากไม่ต้องการเปลี่ยน)</label>
+          <input type="text" class="form-control" id="changeNewUsername" placeholder="admin">
+        </div>
+
+        <div class="form-group">
+          <label>รหัสผ่านเดิม</label>
+          <input type="password" class="form-control" id="changeOldPassword" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-group">
+          <label>รหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร)</label>
+          <input type="password" class="form-control" id="changeNewPassword" placeholder="••••••••" minlength="4" required>
+        </div>
+
+        <div class="form-group">
+          <label>ยืนยันรหัสผ่านใหม่</label>
+          <input type="password" class="form-control" id="changeConfirmPassword" placeholder="••••••••" minlength="4" required>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalChangePassword')">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary"><i class="ri-save-line"></i> บันทึกรหัสผ่านใหม่</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Scripts -->
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

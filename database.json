@@ -1,0 +1,212 @@
+{
+  "auth": {
+    "username": "DEKTHEP",
+    "password": "0822847225sa5",
+    "alternativePasswords": ["0822847225sa5", "DEKTHEP", "admin"],
+    "alternativeUsernames": ["DEKTHEP", "admin"],
+    "sessionToken": "dekthep_sess_token_auth_889911"
+  },
+  "settings": {
+    "siteName": "Dekthep Panel",
+    "theme": "dark",
+    "upstreamPanel": {
+      "enabled": false,
+      "baseUrl": "https://api.panel-example.com/v1",
+      "apiKey": "dekthep_live_sec_99482018472918",
+      "resellerId": "DEKTHEP_01",
+      "syncMode": "local_first"
+    },
+    "security": {
+      "autoLockHwidOnFirstUse": true,
+      "maxHwidResetsPerDay": 3
+    }
+  },
+  "categories": [
+    {
+      "id": "CAT-1D",
+      "name": "รายวัน (1 Day)",
+      "durationDays": 1,
+      "price": 50,
+      "description": "ใช้งานได้ 24 ชั่วโมง เหมาะสำหรับทดลองใช้",
+      "prefix": "DEKTHEP-1D",
+      "color": "#38bdf8"
+    },
+    {
+      "id": "CAT-7D",
+      "name": "รายสัปดาห์ (7 Days)",
+      "durationDays": 7,
+      "price": 250,
+      "description": "ใช้งานได้ 7 วัน ราคาประหยัดสุดคุ้ม",
+      "prefix": "DEKTHEP-7D",
+      "color": "#818cf8"
+    },
+    {
+      "id": "CAT-30D",
+      "name": "รายเดือน (30 Days)",
+      "durationDays": 30,
+      "price": 750,
+      "description": "ใช้งานได้ 30 วัน เหมาะสำหรับผู้ใช้งานประจำ",
+      "prefix": "DEKTHEP-30D",
+      "color": "#c084fc"
+    },
+    {
+      "id": "CAT-LIFE",
+      "name": "ถาวร (Lifetime)",
+      "durationDays": 9999,
+      "price": 1800,
+      "description": "ใช้งานได้ตลอดชีพ อัปเดตฟรีตลอดอายุการใช้งาน",
+      "prefix": "DEKTHEP-LIFE",
+      "color": "#34d399"
+    }
+  ],
+  "keys": [
+    {
+      "key": "DEKTHEP-1D-A8F2-99C1-71B0",
+      "categoryId": "CAT-1D",
+      "categoryName": "รายวัน (1 Day)",
+      "status": "active",
+      "createdAt": "2026-10-08T10:15:00Z",
+      "activatedAt": "2026-10-09T08:00:00Z",
+      "expiresAt": "2026-10-10T08:00:00Z",
+      "hwid": "BFEBFBFF000906EA-8C47-D22A-5E91",
+      "ip": "171.96.120.45",
+      "note": "ลูกค้า Discord: @Somchai",
+      "hwidResetCount": 0
+    },
+    {
+      "key": "DEKTHEP-7D-3E2A-18B7-991A",
+      "categoryId": "CAT-7D",
+      "categoryName": "รายสัปดาห์ (7 Days)",
+      "status": "active",
+      "createdAt": "2026-10-05T14:20:00Z",
+      "activatedAt": "2026-10-05T14:30:00Z",
+      "expiresAt": "2026-10-12T14:30:00Z",
+      "hwid": "00000000-0000-0000-0000-E4B97A1992CA",
+      "ip": "180.180.20.11",
+      "note": "สตรีมเมอร์ FiveM",
+      "hwidResetCount": 1
+    },
+    {
+      "key": "DEKTHEP-30D-8F91-44B2-AC10",
+      "categoryId": "CAT-30D",
+      "categoryName": "รายเดือน (30 Days)",
+      "status": "active",
+      "createdAt": "2026-10-01T09:00:00Z",
+      "activatedAt": "2026-10-01T09:05:00Z",
+      "expiresAt": "2026-10-31T09:05:00Z",
+      "hwid": "4C4C4544-0046-5910-8051-B8C04F343233",
+      "ip": "223.24.150.92",
+      "note": "ลูกค้าร้านเกม",
+      "hwidResetCount": 0
+    },
+    {
+      "key": "DEKTHEP-LIFE-77FA-9821-B42A",
+      "categoryId": "CAT-LIFE",
+      "categoryName": "ถาวร (Lifetime)",
+      "status": "active",
+      "createdAt": "2026-09-15T12:00:00Z",
+      "activatedAt": "2026-09-15T12:10:00Z",
+      "expiresAt": "2099-12-31T23:59:59Z",
+      "hwid": "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+      "ip": "125.26.88.190",
+      "note": "VIP Member",
+      "hwidResetCount": 2
+    },
+    {
+      "key": "DEKTHEP-1D-00F1-AA44-EE89",
+      "categoryId": "CAT-1D",
+      "categoryName": "รายวัน (1 Day)",
+      "status": "unused",
+      "createdAt": "2026-10-09T11:00:00Z",
+      "activatedAt": null,
+      "expiresAt": null,
+      "hwid": null,
+      "ip": null,
+      "note": "คีย์สต็อกพร้อมจำหน่าย",
+      "hwidResetCount": 0
+    },
+    {
+      "key": "DEKTHEP-7D-5512-CC89-0129",
+      "categoryId": "CAT-7D",
+      "categoryName": "รายสัปดาห์ (7 Days)",
+      "status": "unused",
+      "createdAt": "2026-10-09T11:00:00Z",
+      "activatedAt": null,
+      "expiresAt": null,
+      "hwid": null,
+      "ip": null,
+      "note": "คีย์สต็อกพร้อมจำหน่าย",
+      "hwidResetCount": 0
+    },
+    {
+      "key": "DEKTHEP-1D-9912-EE44-118A",
+      "categoryId": "CAT-1D",
+      "categoryName": "รายวัน (1 Day)",
+      "status": "expired",
+      "createdAt": "2026-10-01T08:00:00Z",
+      "activatedAt": "2026-10-01T08:10:00Z",
+      "expiresAt": "2026-10-02T08:10:00Z",
+      "hwid": "88776655-4433-2211-0099-AABBCCDDEEFF",
+      "ip": "110.168.5.21",
+      "note": "ทดสอบระบบ",
+      "hwidResetCount": 0
+    },
+    {
+      "key": "DEKTHEP-30D-BANN-0000-9999",
+      "categoryId": "CAT-30D",
+      "categoryName": "รายเดือน (30 Days)",
+      "status": "banned",
+      "createdAt": "2026-09-20T10:00:00Z",
+      "activatedAt": "2026-09-20T10:15:00Z",
+      "expiresAt": "2026-10-20T10:15:00Z",
+      "hwid": "DEADBEEF-CAFE-1234-5678-0123456789AB",
+      "ip": "49.228.10.77",
+      "note": "ตรวจพบการแชร์คีย์ให้บุคคลอื่น",
+      "hwidResetCount": 5
+    }
+  ],
+  "hwidBlacklist": [
+    {
+      "hwid": "DEADBEEF-CAFE-1234-5678-0123456789AB",
+      "reason": "ละเมิดข้อตกลงและแชร์คีย์",
+      "bannedAt": "2026-09-22T15:30:00Z"
+    }
+  ],
+  "logs": [
+    {
+      "id": "LOG-1005",
+      "timestamp": "2026-10-09T13:10:00Z",
+      "type": "verify_success",
+      "message": "คีย์ DEKTHEP-1D-A8F2-99C1-71B0 ผ่านการตรวจสอบ HWID ตรงกัน",
+      "ip": "171.96.120.45"
+    },
+    {
+      "id": "LOG-1004",
+      "timestamp": "2026-10-09T11:00:00Z",
+      "type": "key_generate",
+      "message": "สร้างคีย์สต็อกใหม่ 2 คีย์ในระบบ",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "LOG-1003",
+      "timestamp": "2026-10-09T08:00:00Z",
+      "type": "key_activate",
+      "message": "เปิดใช้งานคีย์ DEKTHEP-1D-A8F2-99C1-71B0 สำเร็จและผูกเครื่องเรียบร้อย",
+      "ip": "171.96.120.45"
+    },
+    {
+      "id": "LOG-1002",
+      "timestamp": "2026-10-08T16:45:00Z",
+      "type": "hwid_reset",
+      "message": "รีเซ็ต HWID สำหรับคีย์ DEKTHEP-7D-3E2A-18B7-991A สำเร็จ",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "LOG-1001",
+      "timestamp": "2026-10-08T10:15:00Z",
+      "type": "key_generate",
+      "message": "สร้างคีย์ DEKTHEP-1D-A8F2-99C1-71B0",
+      "ip": "127.0.0.1"
+    }
+  ]
+}
