@@ -31,6 +31,108 @@ $rawInput = file_get_contents('php://input');
 $body = json_decode($rawInput, true);
 $db = getDB($dbFile);
 
+if (strpos($_SERVER['REQUEST_URI'], '/api/1.3') !== false || $action === 'keyauth') {
+    if (empty($body)) {
+        parse_str($rawInput, $body);
+    }
+    $reqType = isset($body['type']) ? $body['type'] : '';
+    $clientKey = isset($body['key']) ? trim($body['key']) : '';
+    $clientHwid = isset($body['hwid']) ? trim($body['hwid']) : '';
+
+    if ($reqType === 'init') {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Initialized',
+            'sessionid' => 'sess_' . bin2hex(random_bytes(8)),
+            'appinfo' => [
+                'numUsers' => '1',
+                'numOnlineUsers' => '1',
+                'numKeys' => (string)count($db['keys']),
+                'version' => '1.0',
+                'customerPanelLink' => 'https://dekthep.metaxstore.online'
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($reqType === 'license') {
+        if (empty($clientKey)) {
+            echo json_encode(['success' => false, 'message' => 'กรุณาระบุรหัสคีย์'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $targetKey = null;
+        foreach ($db['keys'] as &$k) {
+            if ($k['key'] === $clientKey) {
+                $targetKey = &$k;
+                break;
+            }
+        }
+
+        if (!$targetKey) {
+            echo json_encode(['success' => false, 'message' => 'ไม่พบคีย์ในระบบ หรือคีย์ไม่ถูกต้อง'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        if ($targetKey['status'] === 'banned') {
+            echo json_encode(['success' => false, 'message' => 'คีย์ถูกระงับการใช้งาน'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        if ($targetKey['status'] === 'unused' || empty($targetKey['activatedAt'])) {
+            $targetKey['status'] = 'active';
+            $targetKey['activatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+            $targetKey['hwid'] = $clientHwid;
+            $targetKey['ip'] = $_SERVER['REMOTE_ADDR'];
+            $targetKey['expiresAt'] = gmdate('Y-m-d\TH:i:s\Z', strtotime('+30 days'));
+            saveDB($dbFile, $db);
+        }
+
+        if (!empty($targetKey['hwid']) && !empty($clientHwid) && $targetKey['hwid'] !== $clientHwid) {
+            echo json_encode(['success' => false, 'message' => 'HWID ไม่ตรงกับเครื่องที่ลงทะเบียนไว้'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $expUnix = !empty($targetKey['expiresAt']) ? (string)strtotime($targetKey['expiresAt']) : '4102444799';
+        $curUnix = time();
+        $timeLeft = (string)max(0, (int)$expUnix - $curUnix);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Logged in!',
+            'info' => [
+                'username' => !empty($targetKey['note']) ? $targetKey['note'] : 'DEKTHEP_User',
+                'subscriptions' => [
+                    [
+                        'subscription' => $targetKey['categoryName'],
+                        'key' => $targetKey['key'],
+                        'expiry' => $expUnix,
+                        'timeleft' => $timeLeft
+                    ]
+                ],
+                'ip' => $_SERVER['REMOTE_ADDR'],
+                'hwid' => $targetKey['hwid'],
+                'createdate' => '1696800000',
+                'lastlogin' => (string)$curUnix
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($reqType === 'check') {
+        echo json_encode(['success' => true, 'message' => 'Session is validated'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($reqType === 'var') {
+        echo json_encode(['success' => true, 'message' => 'Success', 'response' => ''], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    echo json_encode(['success' => true, 'message' => 'Handled'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($action === 'database' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     echo json_encode($db, JSON_UNESCAPED_UNICODE);
     exit;

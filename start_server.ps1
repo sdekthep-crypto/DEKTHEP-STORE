@@ -103,9 +103,180 @@ while ($listener.IsListening) {
         if ($urlPath.StartsWith("/api/")) {
             $db = Get-DB
 
-            # 1. GET /api/database
-            if ($urlPath -eq "/api/database" -and $method -eq "GET") {
-                & $sendJson $db 200
+            # 1.0 KeyAuth 1.3 Endpoint for ES.exe / KeyAuth Client Programs
+            if ($urlPath -match "^/api/1\.[0-3]" -and $method -eq "POST") {
+                $params = @{}
+                if ($bodyText.Trim().StartsWith("{")) {
+                    $jsonParams = $bodyText | ConvertFrom-Json
+                    foreach ($prop in $jsonParams.PSObject.Properties) {
+                        $params[$prop.Name] = $prop.Value
+                    }
+                } else {
+                    foreach ($part in ($bodyText -split '&')) {
+                        $kv = $part -split '=', 2
+                        if ($kv.Count -eq 2) {
+                            $k = [System.Uri]::UnescapeDataString($kv[0])
+                            $v = [System.Uri]::UnescapeDataString($kv[1])
+                            $params[$k] = $v
+                        }
+                    }
+                }
+
+                $reqType = $params["type"]
+                $clientKey = $params["key"]
+                $clientHwid = $params["hwid"]
+                $clientSession = $params["sessionid"]
+                $clientIp = $request.RemoteEndPoint.Address.ToString()
+
+                # Handler: type=init
+                if ($reqType -eq "init") {
+                    $sess = "sess_" + (-join ((65..90) + (48..57) | Get-Random -Count 16 | ForEach-Object { [char]$_ }))
+                    & $sendJson @{
+                        success = $true
+                        message = "Initialized"
+                        sessionid = $sess
+                        appinfo = @{
+                            numUsers = "1"
+                            numOnlineUsers = "1"
+                            numKeys = "$($db.keys.Count)"
+                            version = "1.0"
+                            customerPanelLink = "https://dekthep.metaxstore.online"
+                        }
+                    } 200
+                    continue
+                }
+
+                # Handler: type=license
+                if ($reqType -eq "license") {
+                    if ([string]::IsNullOrWhiteSpace($clientKey)) {
+                        & $sendJson @{ success = $false; message = "กรุณาระบุรหัสคีย์ (License Key)" } 200
+                        continue
+                    }
+
+                    # Check blacklist
+                    $isBlacklisted = $db.hwidBlacklist | Where-Object { $_.hwid -eq $clientHwid }
+                    if ($isBlacklisted) {
+                        & $sendJson @{ success = $false; message = "เครื่องนี้ถูกระงับ: $($isBlacklisted.reason)" } 200
+                        continue
+                    }
+
+                    $found = $db.keys | Where-Object { $_.key -eq $clientKey }
+                    if (-not $found) {
+                        & $sendJson @{ success = $false; message = "ไม่พบคีย์ในระบบ หรือคีย์ไม่ถูกต้อง" } 200
+                        continue
+                    }
+
+                    if ($found.status -eq "banned") {
+                        & $sendJson @{ success = $false; message = "คีย์นี้ถูกระงับการใช้งาน กรุณาติดต่อแอดมิน" } 200
+                        continue
+                    }
+
+                    # First time activation
+                    if ($found.status -eq "unused" -or -not $found.activatedAt) {
+                        $found.status = "active"
+                        $found.activatedAt = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $cat = $db.categories | Where-Object { $_.id -eq $found.categoryId }
+                        $days = if ($cat) { [int]$cat.durationDays } else { 30 }
+                        
+                        if ($days -ge 9000) {
+                            $found.expiresAt = "2099-12-31T23:59:59Z"
+                        } else {
+                            $found.expiresAt = (Get-Date).AddDays($days).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        }
+                        $found.hwid = $clientHwid
+                        $found.ip = $clientIp
+
+                        $newLog = [PSCustomObject]@{
+                            id = "LOG-" + (Get-Random -Minimum 1000 -Maximum 9999)
+                            timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                            type = "keyauth_login"
+                            message = "โปรแกรม ES.exe เปิดใช้งานคีย์ $clientKey สำเร็จ และผูก HWID เรียบร้อย"
+                            ip = $clientIp
+                        }
+                        $db.logs = @($newLog) + @($db.logs)
+                        Save-DB $db
+                    }
+
+                    # Check expiration
+                    if ($found.expiresAt) {
+                        $expTime = [DateTime]::Parse($found.expiresAt)
+                        if ((Get-Date) -gt $expTime) {
+                            $found.status = "expired"
+                            Save-DB $db
+                            & $sendJson @{ success = $false; message = "คีย์หมดอายุการใช้งานแล้ว ($($found.expiresAt))" } 200
+                            continue
+                        }
+                    }
+
+                    # Check HWID lock
+                    if ($found.hwid -and $clientHwid -and $found.hwid -ne $clientHwid) {
+                        & $sendJson @{
+                            success = $false
+                            message = "HWID ไม่ตรงกับเครื่องที่ลงทะเบียนไว้ กรุณาติดต่อแอดมินเพื่อรีเซ็ต HWID"
+                        } 200
+                        continue
+                    }
+
+                    if (-not $found.hwid -and $clientHwid) {
+                        $found.hwid = $clientHwid
+                        $found.ip = $clientIp
+                        Save-DB $db
+                    }
+
+                    # Calculate unix timestamps
+                    $expUnix = if ($found.expiresAt) {
+                        [DateTimeOffset]::Parse($found.expiresAt).ToUnixTimeSeconds().ToString()
+                    } else {
+                        "4102444799"
+                    }
+                    $diffSec = [int64]$expUnix - $curUnix
+                    $timeLeft = if ($diffSec -gt 0) { $diffSec.ToString() } else { "0" }
+
+                    $newLog = [PSCustomObject]@{
+                        id = "LOG-" + (Get-Random -Minimum 1000 -Maximum 9999)
+                        timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        type = "keyauth_login"
+                        message = "โปรแกรม ES.exe เข้าสู่ระบบสำเร็จด้วยคีย์ $clientKey"
+                        ip = $clientIp
+                    }
+                    $db.logs = @($newLog) + @($db.logs)
+                    Save-DB $db
+
+                    & $sendJson @{
+                        success = $true
+                        message = "Logged in!"
+                        info = @{
+                            username = if ($found.note) { $found.note } else { "DEKTHEP_User" }
+                            subscriptions = @(
+                                @{
+                                    subscription = $found.categoryName
+                                    key = $found.key
+                                    expiry = $expUnix
+                                    timeleft = $timeLeft
+                                }
+                            )
+                            ip = $clientIp
+                            hwid = $found.hwid
+                            createdate = "1696800000"
+                            lastlogin = $curUnix.ToString()
+                        }
+                    } 200
+                    continue
+                }
+
+                # Handler: type=check
+                if ($reqType -eq "check") {
+                    & $sendJson @{ success = $true; message = "Session is validated" } 200
+                    continue
+                }
+
+                # Handler: type=var
+                if ($reqType -eq "var") {
+                    & $sendJson @{ success = $true; message = "Success"; response = "" } 200
+                    continue
+                }
+
+                & $sendJson @{ success = $true; message = "Handled" } 200
                 continue
             }
 

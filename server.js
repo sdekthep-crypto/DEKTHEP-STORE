@@ -13,6 +13,7 @@ const DB_PATH = path.join(__dirname, 'database.json');
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 function getDB() {
@@ -27,6 +28,143 @@ function getDB() {
 function saveDB(data) {
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
 }
+
+// KeyAuth 1.3 Protocol Endpoint for ES.exe
+app.post(['/api/1.3', '/api/1.3/'], (req, res) => {
+    const db = getDB();
+    const { type, key, hwid, sessionid } = req.body;
+    const clientIp = req.ip || '127.0.0.1';
+
+    if (type === 'init') {
+        const sess = 'sess_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+        return res.json({
+            success: true,
+            message: 'Initialized',
+            sessionid: sess,
+            appinfo: {
+                numUsers: '1',
+                numOnlineUsers: '1',
+                numKeys: String(db.keys.length),
+                version: '1.0',
+                customerPanelLink: 'https://dekthep.metaxstore.online'
+            }
+        });
+    }
+
+    if (type === 'license') {
+        if (!key) return res.json({ success: false, message: 'กรุณาระบุรหัสคีย์ (License Key)' });
+
+        const isBlacklisted = db.hwidBlacklist?.find(b => b.hwid === hwid);
+        if (isBlacklisted) {
+            return res.json({ success: false, message: `เครื่องนี้ถูกระงับ: ${isBlacklisted.reason}` });
+        }
+
+function findKeySmart(keys, searchKey) {
+    if (!keys || !searchKey) return null;
+    const clean = String(searchKey).trim().toUpperCase();
+    let found = keys.find(k => k.key.toUpperCase() === clean);
+    if (found) return found;
+    const withO = clean.replace(/0/g, 'O');
+    found = keys.find(k => k.key.toUpperCase() === withO);
+    if (found) return found;
+    const with0 = clean.replace(/O/g, '0');
+    return keys.find(k => k.key.toUpperCase() === with0);
+}
+
+        const found = findKeySmart(db.keys, key);
+        if (!found) {
+            return res.json({ success: false, message: 'ไม่พบคีย์ในระบบ หรือคีย์ไม่ถูกต้อง' });
+        }
+
+        if (found.status === 'banned') {
+            return res.json({ success: false, message: 'คีย์นี้ถูกระงับการใช้งาน กรุณาติดต่อแอดมิน' });
+        }
+
+        // Activate unused
+        if (found.status === 'unused' || !found.activatedAt) {
+            found.status = 'active';
+            found.activatedAt = new Date().toISOString();
+            const cat = db.categories.find(c => c.id === found.categoryId);
+            const days = cat ? cat.durationDays : 30;
+            if (days >= 9000) {
+                found.expiresAt = '2099-12-31T23:59:59.000Z';
+            } else {
+                const exp = new Date();
+                exp.setDate(exp.getDate() + days);
+                found.expiresAt = exp.toISOString();
+            }
+            found.hwid = hwid;
+            found.ip = clientIp;
+            db.logs.unshift({
+                id: 'LOG-' + Math.floor(1000 + Math.random() * 9000),
+                timestamp: new Date().toISOString(),
+                type: 'keyauth_login',
+                message: `โปรแกรม ES.exe เปิดใช้งานคีย์ ${key} สำเร็จ`,
+                ip: clientIp
+            });
+            saveDB(db);
+        }
+
+        if (found.expiresAt && new Date() > new Date(found.expiresAt)) {
+            found.status = 'expired';
+            saveDB(db);
+            return res.json({ success: false, message: `คีย์หมดอายุการใช้งานแล้ว (${found.expiresAt})` });
+        }
+
+        if (found.hwid && hwid && found.hwid !== hwid) {
+            return res.json({ success: false, message: 'HWID ไม่ตรงกับเครื่องที่ลงทะเบียนไว้ กรุณาติดต่อแอดมินเพื่อรีเซ็ต HWID' });
+        }
+
+        if (!found.hwid && hwid) {
+            found.hwid = hwid;
+            found.ip = clientIp;
+            saveDB(db);
+        }
+
+        const expUnix = found.expiresAt ? Math.floor(new Date(found.expiresAt).getTime() / 1000).toString() : '4102444799';
+        const curUnix = Math.floor(Date.now() / 1000);
+        const timeLeft = Math.max(0, Number(expUnix) - curUnix).toString();
+
+        db.logs.unshift({
+            id: 'LOG-' + Math.floor(1000 + Math.random() * 9000),
+            timestamp: new Date().toISOString(),
+            type: 'keyauth_login',
+            message: `โปรแกรม ES.exe เข้าสู่ระบบสำเร็จด้วยคีย์ ${key}`,
+            ip: clientIp
+        });
+        saveDB(db);
+
+        return res.json({
+            success: true,
+            message: 'Logged in!',
+            info: {
+                username: found.note || 'DEKTHEP_User',
+                subscriptions: [
+                    {
+                        subscription: found.categoryName,
+                        key: found.key,
+                        expiry: expUnix,
+                        timeleft: timeLeft
+                    }
+                ],
+                ip: clientIp,
+                hwid: found.hwid,
+                createdate: '1696800000',
+                lastlogin: curUnix.toString()
+            }
+        });
+    }
+
+    if (type === 'check') {
+        return res.json({ success: true, message: 'Session is validated' });
+    }
+
+    if (type === 'var') {
+        return res.json({ success: true, message: 'Success', response: '' });
+    }
+
+    res.json({ success: true, message: 'Handled' });
+});
 
 // 1. GET /api/database
 app.get('/api/database', (req, res) => {
@@ -218,7 +356,7 @@ app.post('/api/license/verify', (req, res) => {
         return res.status(403).json({ valid: false, status: "HWID_BLACKLISTED", message: `เครื่องนี้ถูกระงับ: ${isBlacklisted.reason}` });
     }
 
-    const found = db.keys.find(k => k.key === key);
+    const found = findKeySmart(db.keys, key);
     if (!found) {
         return res.status(404).json({ valid: false, status: "INVALID_KEY", message: "ไม่พบคีย์ในระบบ หรือคีย์ไม่ถูกต้อง" });
     }
